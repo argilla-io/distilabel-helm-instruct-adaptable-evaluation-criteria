@@ -6,8 +6,9 @@ from dataclasses import dataclass
 from typing import List, TypedDict
 
 import regex as re
-from criterion import Rating, default_criterion
 from distilabel.tasks import Prompt, TextGenerationTask
+
+from helm_instruct.criterion.en import Rating, default_criterion
 
 
 class HelmInstructOutput(TypedDict):
@@ -17,26 +18,6 @@ class HelmInstructOutput(TypedDict):
     rationale: str
 
 
-helm_instruct_template = """{task_description}
-
-Instruction:
-{prompt}
-
-Response:
-{response}
-
-{criterion_question}
-Options:
-{criterion_options}
-
-Your answer must be in the following format:
-
-<rating>[1-5]</rating>
-<rationale>your rationale</rationale>
-
-Please rate the Response: based on the Options: and provide a rationale for your rating."""
-
-
 @dataclass
 class HelmInstructTask(TextGenerationTask):
     """Rough translation from the guidelines for the labelling task:
@@ -44,6 +25,7 @@ class HelmInstructTask(TextGenerationTask):
     to a distilabel task.
     """
 
+    template: str
     criterion: str = None
     task_description: str = (
         "The following is an instruction written by a human, and a response to the instruction written by an AI model. Please answer the following questions about the AI model’s response."
@@ -60,16 +42,19 @@ class HelmInstructTask(TextGenerationTask):
         return ["prompt", "response"]
 
     def generate_prompt(self, prompt: str, response: str) -> Prompt:
+        scores = [rating["value"] for rating in self.criterion_options]
         render_kwargs = {
             "task_description": self.task_description,
             "criterion_question": self.criterion_question,
             "criterion_options": self.criterion_options,
+            "min_score": min(scores),
+            "max_score": max(scores),
             "prompt": prompt,
             "response": response,
         }
         return Prompt(
             system_prompt=self.system_prompt,
-            formatted_prompt=helm_instruct_template.format(**render_kwargs),
+            formatted_prompt=self.template.format(**render_kwargs),
         )
 
     @classmethod

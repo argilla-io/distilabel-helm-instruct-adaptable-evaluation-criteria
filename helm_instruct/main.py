@@ -1,13 +1,15 @@
 import os
 
-from criterion import default_criterion
+from criterion.en import default_criterion
 from data import load_data_helm_insruct
 from distilabel.dataset import DatasetCheckpoint
 from distilabel.llm import OpenAILLM
 from distilabel.pipeline import Pipeline
 from distilabel.tasks import TextGenerationTask
-from evaluator import HelmInstructTask
+from evaluator.evaluator import HelmInstructTask
+from evaluator.template.en import template
 
+scores = [rating.value for rating in default_criterion["Helpfulness"].ratings]
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 
@@ -48,7 +50,7 @@ for criterion_key in default_criterion:
     pipe = Pipeline(
         labeller=OpenAILLM(
             model="gpt-4-1106-preview",  # gpt-4 turbo
-            task=HelmInstructTask(criterion=criterion_key),
+            task=HelmInstructTask(template=template, criterion=criterion_key),
             max_new_tokens=512,
             num_threads=8,
             api_key=OPENAI_API_TOKEN,

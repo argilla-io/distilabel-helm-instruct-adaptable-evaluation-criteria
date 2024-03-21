@@ -1,13 +1,14 @@
 import os
 
-from criterion.en import default_criterion
-from data import load_data_helm_insruct
 from distilabel.dataset import DatasetCheckpoint
 from distilabel.llm import OpenAILLM
 from distilabel.pipeline import Pipeline
 from distilabel.tasks import TextGenerationTask
-from evaluator.evaluator import HelmInstructTask
-from evaluator.template.en import template
+
+from helm_instruct.criterion.en import default_criterion
+from helm_instruct.data import load_data_helm_insruct
+from helm_instruct.evaluator.evaluator import HelmInstructTask
+from helm_instruct.evaluator.template.en import template
 
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
@@ -45,11 +46,11 @@ checkpoint_strategy = DatasetCheckpoint(
     save_frequency=500,
 )
 skip_dry_run = True
-for criterion_key in default_criterion:
+for criterion_key, criterion_value in default_criterion.items():
     pipe = Pipeline(
         labeller=OpenAILLM(
             model="gpt-4-1106-preview",  # gpt-4 turbo
-            task=HelmInstructTask(template=template, criterion=criterion_key),
+            task=HelmInstructTask(template=template, criterion=criterion_value),
             max_new_tokens=512,
             num_threads=8,
             api_key=OPENAI_API_TOKEN,
@@ -63,6 +64,7 @@ for criterion_key in default_criterion:
         skip_dry_run=skip_dry_run,
         # checkpoint_strategy=checkpoint_strategy,
     )
+    dataset = dataset.rename_column("generations", f"generations_{criterion_key}")
     dataset = dataset.rename_column("rating", f"rating_{criterion_key}")
     dataset = dataset.rename_column("rationale", f"rationale_{criterion_key}")
     skip_dry_run = False

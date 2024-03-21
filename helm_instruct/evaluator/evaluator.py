@@ -8,7 +8,7 @@ from typing import List, TypedDict
 import regex as re
 from distilabel.tasks import Prompt, TextGenerationTask
 
-from helm_instruct.criterion.en import Rating, default_criterion
+from helm_instruct.criterion.base import Criterion
 
 
 class HelmInstructOutput(TypedDict):
@@ -25,16 +25,14 @@ class HelmInstructTask(TextGenerationTask):
     to a distilabel task.
     """
 
-    template: str
-    criterion: str = None
+    template: str = None
+    criterion: Criterion = None
     task_description: str = (
         "The following is an instruction written by a human, and a response to the instruction written by an AI model. Please answer the following questions about the AI model’s response."
     )
     system_prompt: str = (
         "You are an AI response evaluator focused on rating prompts that are clear, interesting and complex for fine-tuning open source LLMs."
     )
-    criterion_question: str = None
-    criterion_options: List[Rating] = None
 
     @property
     def input_args_names(self) -> List[str]:
@@ -42,11 +40,11 @@ class HelmInstructTask(TextGenerationTask):
         return ["prompt", "response"]
 
     def generate_prompt(self, prompt: str, response: str) -> Prompt:
-        scores = [rating["value"] for rating in self.criterion_options]
+        scores = [rating["value"] for rating in self.criterion["ratings"]]
         render_kwargs = {
             "task_description": self.task_description,
-            "criterion_question": self.criterion_question,
-            "criterion_options": self.criterion_options,
+            "criterion_question": self.criterion["question"],
+            "criterion_options": self.criterion["ratings"],
             "min_score": min(scores),
             "max_score": max(scores),
             "prompt": prompt,
@@ -56,31 +54,6 @@ class HelmInstructTask(TextGenerationTask):
             system_prompt=self.system_prompt,
             formatted_prompt=self.template.format(**render_kwargs),
         )
-
-    @classmethod
-    def for_helpfullness(cls):
-        return cls(criterion="Helpfulness")
-
-    @classmethod
-    def for_understandability(cls):
-        return cls(criterion="Understandability")
-
-    @classmethod
-    def for_completeness(cls):
-        return cls(criterion="Completeness")
-
-    @classmethod
-    def for_conciseness(cls):
-        return cls(criterion="Conciseness")
-
-    @classmethod
-    def for_harmlessness(cls):
-        return cls(criterion="Harmlessness")
-
-    def __post_init__(self):
-        self.criterion_question = default_criterion[self.criterion]["question"]
-        self.criterion_options = default_criterion[self.criterion]["ratings"]
-        self.task_description = default_criterion[self.criterion]["question"]
 
     def parse_output(self, output: str) -> HelmInstructOutput:  # type: ignore
         """Parses the output of the model into the desired format."""

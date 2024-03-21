@@ -1,4 +1,4 @@
-from criterion.base import Criterion, Rating
+from helm_instruct.criterion.base import Criterion, Rating
 
 default_criterion: dict[str, Criterion] = {
     "Helpfulness": Criterion(

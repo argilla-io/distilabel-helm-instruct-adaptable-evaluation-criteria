@@ -12,7 +12,7 @@ Opties:
 
 Je antwoord moet in het volgende formaat zijn:
 
-<score>[{min_score}-{max_score}]</score>
-<reden>je reden</reden>
+<rating>[{min_score}-{max_score}]</rating>
+<rationale>je reden</rationale>
 
-Beoordeel alstublieft de Reactie: op basis van de Opties: en geef een reden voor je beoordeling."""
+Beoordeel alstublieft de Reactie: met een rating op basis van de Opties: en geef een rationale voor je beoordeling."""

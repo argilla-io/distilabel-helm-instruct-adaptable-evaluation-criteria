@@ -5,9 +5,9 @@ from distilabel.dataset import DatasetCheckpoint
 from distilabel.llm import OpenAILLM
 from distilabel.pipeline import Pipeline
 
-from helm_instruct.criterion.en import default_criterion
+from helm_instruct.criterion.nl import default_criterion
 from helm_instruct.evaluator.evaluator import HelmInstructTask
-from helm_instruct.evaluator.template.en import template
+from helm_instruct.evaluator.template.nl import template
 
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN") or os.getenv("HF_AUTH_TOKEN")
@@ -23,6 +23,8 @@ relevant_columns = [
     if column_name not in irrelevant_columns
 ]
 
+system_prompt_dutch = "Je bent een AI-responsbeoordelaar die zich richt op het beoordelen van instructies die duidelijk, interessant en complex zijn voor het verfijnen van open source LLM's."
+task_description_dutch = "Het volgende is een instructie geschreven door een mens en een reactie op de instructie geschreven door een AI-model. Beantwoord alstublieft de volgende vragen over de reactie van het AI-model."
 
 # phase2 - review responses
 checkpoint_strategy = DatasetCheckpoint(
@@ -30,7 +32,7 @@ checkpoint_strategy = DatasetCheckpoint(
     extra_kwargs={
         "repo_id": NEW_DATASET_NAME,
         "token": HF_API_TOKEN,
-        "private": True,
+        "private": False,
         "split": "train",
     },
     save_frequency=1,
@@ -47,6 +49,8 @@ for column_name in relevant_columns:
                 task=HelmInstructTask(
                     template=template,
                     criterion=criterion_value,
+                    system_prompt=system_prompt_dutch,
+                    task_description=task_description_dutch,
                 ),
                 max_new_tokens=512,
                 num_threads=8,

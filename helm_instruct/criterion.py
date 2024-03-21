@@ -1,4 +1,4 @@
-from typing import TypedDict,
+from typing import TypedDict
 
 
 class Rating(TypedDict):
@@ -7,11 +7,13 @@ class Rating(TypedDict):
     value: int
     description: str
 
+
 class Criterion(TypedDict):
     """A `TypedDict` representing a criterion."""
 
     question: str
     ratings: list[Rating]
+
 
 default_criterion: dict[str, Criterion] = {
     "Helpfulness": Criterion(

@@ -10,7 +10,6 @@ from evaluator import HelmInstructTask
 
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
-NEW_DATASET_NAME = "argilla/intel-orca-dpo-pairs-helm-instruct"  #
 
 # phase1 - generate responses
 dataset = load_data_helm_insruct()
@@ -37,7 +36,7 @@ dataset = dataset.map(lambda x: {"response": x["response"][0], "prompt": x["prom
 # phase2 - review responses
 checkpoint_strategy = DatasetCheckpoint(
     extra_kwargs={
-        "repo_id": NEW_DATASET_NAME,
+        "repo_id": "helm_instruct",
         "token": HF_API_TOKEN,
         "private": True,
         "split": "train",

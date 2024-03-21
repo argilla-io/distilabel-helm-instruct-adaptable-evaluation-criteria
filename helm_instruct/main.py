@@ -9,7 +9,6 @@ from distilabel.tasks import TextGenerationTask
 from evaluator.evaluator import HelmInstructTask
 from evaluator.template.en import template
 
-scores = [rating.value for rating in default_criterion["Helpfulness"].ratings]
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN")
 

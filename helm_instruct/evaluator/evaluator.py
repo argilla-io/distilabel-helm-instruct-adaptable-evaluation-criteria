@@ -57,10 +57,9 @@ class HelmInstructTask(TextGenerationTask):
 
     def parse_output(self, output: str) -> HelmInstructOutput:  # type: ignore
         """Parses the output of the model into the desired format."""
-        pattern = r"<rating>(.*?)</rating>\s*<rationale>(.*?)</rationale>"
+        pattern = r"<rating>(.*?)</rating>\s*"
         match = re.findall(pattern, output, re.DOTALL)
         if match:
             return HelmInstructOutput(
                 rating=float(match[0][0]),
-                rationale=match[0][1].strip(),
             )

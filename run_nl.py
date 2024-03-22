@@ -12,11 +12,11 @@ from helm_instruct.evaluator.template.nl import template
 
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN") or os.getenv("HF_AUTH_TOKEN")
-NEW_DATASET_NAME = "davidberenstein1957/ultra_feedback_dutch_cleaned_helm_instruct_geitje_ultra_vs_gpt4_turbo"
+NEW_DATASET_NAME = "davidberenstein1957/ultra_feedback_dutch_cleaned_helm_instruct_geitje_ultra_vs_gpt4_turbo_example"
 dataset = load_dataset("BramVanroy/ultra_feedback_dutch_cleaned")
 dataset = dataset.rename_column("prompt", "prompt_english")
 dataset = dataset.rename_column("prompt_dutch", "prompt")
-dataset = dataset["train"].select(range(100))
+dataset = dataset["train"].select(range(1))
 irrelevant_columns = ["prompt", "prompt_english", "prompt_dutch"]
 relevant_columns = [
     column_name
@@ -54,8 +54,8 @@ default_criterion["dutchness"] = Criterion(
     ],
 )
 del default_criterion["Harmlessness"]
-def default_criterion["Understandability"]
-def default_criterion["Completeness"]
+del default_criterion["Understandability"]
+del default_criterion["Completeness"]
 
 
 # phase2 - review responses
@@ -70,7 +70,7 @@ checkpoint_strategy = DatasetCheckpoint(
     save_frequency=1,
 )
 for column_name in relevant_columns:
-    skip_dry_run = True
+    skip_dry_run = False
     dataset = dataset.rename_column(
         column_name, "response"
     )  # set column to correct input column
@@ -84,7 +84,7 @@ for column_name in relevant_columns:
                     system_prompt=system_prompt_dutch,
                     task_description=task_description_dutch,
                 ),
-                max_new_tokens=512,
+                max_new_tokens=32,
                 num_threads=8,
                 api_key=OPENAI_API_TOKEN,
                 temperature=0.3,
@@ -102,8 +102,7 @@ for column_name in relevant_columns:
             "generations", f"generations_{criterion_column}"
         )
         dataset = dataset.rename_column("rating", f"rating_{criterion_column}")
-        dataset = dataset.rename_column("rationale", f"rationale_{criterion_column}")
-        skip_dry_run = False
+        skip_dry_run = True
     # convert back to original column name to avoid losing data
     dataset = dataset.rename_column("response", column_name)
 dataset.push_to_hub(NEW_DATASET_NAME, token=HF_API_TOKEN)

@@ -13,6 +13,5 @@ Opties:
 Je antwoord moet in het volgende formaat zijn:
 
 <rating>[{min_score}-{max_score}]</rating>
-<rationale>je reden</rationale>
 
-Beoordeel alstublieft de Reactie: met een rating op basis van de Opties: en geef een rationale voor je beoordeling."""
+Beoordeel alstublieft de Reactie: met een rating op basis van de Opties:."""

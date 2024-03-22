@@ -12,7 +12,7 @@ from helm_instruct.evaluator.template.nl import template
 
 OPENAI_API_TOKEN = os.getenv("OPENAI_API_TOKEN")
 HF_API_TOKEN = os.getenv("HF_API_TOKEN") or os.getenv("HF_AUTH_TOKEN")
-NEW_DATASET_NAME = "davidberenstein1957/ultra_feedback_dutch_cleaned_helm_instruct"
+NEW_DATASET_NAME = "davidberenstein1957/ultra_feedback_dutch_cleaned_helm_instruct_geitje_ultra_vs_gpt4_turbo"
 dataset = load_dataset("BramVanroy/ultra_feedback_dutch_cleaned")
 dataset = dataset.rename_column("prompt", "prompt_english")
 dataset = dataset.rename_column("prompt_dutch", "prompt")
@@ -23,35 +23,38 @@ relevant_columns = [
     for column_name in dataset.column_names
     if column_name not in irrelevant_columns
 ]
+relevant_columns = ["GEITje-7B-ultra", "gpt-4-turbo"]
 
 system_prompt_dutch = "Je bent een AI-responsbeoordelaar die zich richt op het beoordelen van instructies die duidelijk, interessant en complex zijn voor het verfijnen van open source LLM's."
 task_description_dutch = "Het volgende is een instructie geschreven door een mens en een reactie op de instructie geschreven door een AI-model. Beantwoord alstublieft de volgende vragen over de reactie van het AI-model."
 
 default_criterion["dutchness"] = Criterion(
-    question="Is de tekst in vloeiend en gramaticaal correct Nederlands geschreven?",
+    question="Is de tekst in vlot en gramaticaal correct Nederlands geschreven? Negeer code-fragmenten in je analyse en richt je enkel op lopende tekst. Leenwoorden uit andere talen mogen gebruikt worden als dat gewoonlijk is in het veld (bv. bij software).",
     ratings=[
         Rating(
             value=1,
-            description="De tekst is niet vloeiend en bevat veel grammaticale fouten",
+            description="De tekst is onleesbaar of bevat veel grammaticale fouten.",
         ),
         Rating(
             value=2,
-            description="De tekst is niet vloeiend en bevat enkele grammaticale fouten",
+            description="De tekst is moeilijk te begrijpen of bevat veel grammaticale fouten.",
         ),
         Rating(
             value=3,
-            description="De tekst is vloeiend en bevat enkele grammaticale fouten",
+            description="De tekst is begrijpelijk maar bevat enkele grammaticale fouten.",
         ),
         Rating(
             value=4,
-            description="De tekst is vloeiend en bevat nauwelijks grammaticale fouten",
+            description="De tekst is goed geschreven en bevat weinig grammaticale fouten.",
         ),
         Rating(
             value=5,
-            description="De tekst is vloeiend en bevat geen grammaticale fouten",
+            description="De tekst is uitstekend geschreven en bevat geen grammaticale fouten.",
         ),
     ],
 )
+del default_criterion["Harmlessness"]
+
 
 # phase2 - review responses
 checkpoint_strategy = DatasetCheckpoint(
@@ -99,10 +102,7 @@ for column_name in relevant_columns:
         dataset = dataset.rename_column("rating", f"rating_{criterion_column}")
         dataset = dataset.rename_column("rationale", f"rationale_{criterion_column}")
         skip_dry_run = False
-        break
     # convert back to original column name to avoid losing data
     dataset = dataset.rename_column("response", column_name)
-    if len(dataset) > 100:
-        break
-    print(len(dataset))
+
 dataset.push_to_hub(NEW_DATASET_NAME, token=HF_API_TOKEN)

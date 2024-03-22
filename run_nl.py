@@ -84,7 +84,7 @@ for column_name in relevant_columns:
                     system_prompt=system_prompt_dutch,
                     task_description=task_description_dutch,
                 ),
-                max_new_tokens=32,
+                max_new_tokens=8,
                 num_threads=8,
                 api_key=OPENAI_API_TOKEN,
                 temperature=0.3,

@@ -98,9 +98,7 @@ for column_name in relevant_columns:
         )
         # rename columns to avoid overwriting data
         criterion_column = f"{criterion_key}_{column_name}"
-        dataset = dataset.rename_column(
-            "generations", f"generations_{criterion_column}"
-        )
+
         dataset = dataset.rename_column("rating", f"rating_{criterion_column}")
         skip_dry_run = True
     # convert back to original column name to avoid losing data

@@ -54,6 +54,8 @@ default_criterion["dutchness"] = Criterion(
     ],
 )
 del default_criterion["Harmlessness"]
+def default_criterion["Understandability"]
+def default_criterion["Completeness"]
 
 
 # phase2 - review responses
@@ -104,5 +106,4 @@ for column_name in relevant_columns:
         skip_dry_run = False
     # convert back to original column name to avoid losing data
     dataset = dataset.rename_column("response", column_name)
-
 dataset.push_to_hub(NEW_DATASET_NAME, token=HF_API_TOKEN)

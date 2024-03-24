@@ -65,7 +65,8 @@ for split in retry_splits:
         [dataset[split], dataset[split.replace("_retry", "")]]
     )
     del dataset[split]
-
+assert "geitje.Helpfulness_retry" not in dataset
+assert len(dataset["geitje.Helpfulness"].filter(lambda x: x["rating"] is None)) == 0
 
 # phase2 - review responses
 for criterion in criteria:
@@ -75,38 +76,39 @@ for criterion in criteria:
         else:
             split = split + "_retry"
         dataset = dataset[split].filter(lambda x: x["rating"] is None)
-        checkpoint_strategy = DatasetCheckpoint(
-            strategy="hf-hub",
-            extra_kwargs={
-                "repo_id": NEW_DATASET_NAME,
-                "token": HF_API_TOKEN,
-                "private": False,
-                "split": split,
-            },
-            save_frequency=5,
-        )
-
-        pipe = Pipeline(
-            labeller=OpenAILLM(
-                model="gpt-4-1106-preview",  # gpt-4 turbo
-                task=HelmInstructTask(
-                    template=template,
-                    criterion=criterion,
-                    system_prompt=system_prompt_dutch,
-                    task_description=task_description_dutch,
-                ),
-                max_new_tokens=8,
-                num_threads=8,
-                api_key=OPENAI_API_TOKEN,
-                temperature=0.3,
+        if len(dataset):
+            checkpoint_strategy = DatasetCheckpoint(
+                strategy="hf-hub",
+                extra_kwargs={
+                    "repo_id": NEW_DATASET_NAME,
+                    "token": HF_API_TOKEN,
+                    "private": False,
+                    "split": split,
+                },
+                save_frequency=5,
             )
-        )
-        dataset = pipe.generate(
-            dataset,
-            batch_size=100,
-            skip_dry_run=False,
-            checkpoint_strategy=checkpoint_strategy,
-        )
+
+            pipe = Pipeline(
+                labeller=OpenAILLM(
+                    model="gpt-4-1106-preview",  # gpt-4 turbo
+                    task=HelmInstructTask(
+                        template=template,
+                        criterion=criterion,
+                        system_prompt=system_prompt_dutch,
+                        task_description=task_description_dutch,
+                    ),
+                    max_new_tokens=8,
+                    num_threads=8,
+                    api_key=OPENAI_API_TOKEN,
+                    temperature=0.3,
+                )
+            )
+            dataset = pipe.generate(
+                dataset,
+                batch_size=100,
+                skip_dry_run=False,
+                checkpoint_strategy=checkpoint_strategy,
+            )
 
     # convert back to original column name to avoid losing data
     dataset.push_to_hub(

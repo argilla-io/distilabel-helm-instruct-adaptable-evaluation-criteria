@@ -62,7 +62,7 @@ for retry_split in retry_splits:
         lambda x: x["rating"] is not None
     )
     unique_idx = dataset[retry_split].unique("idx")
-    dataset[retry_split] = dataset[original_split].filter(
+    dataset[original_split] = dataset[original_split].filter(
         lambda x: x["idx"] not in unique_idx
     )
     dataset[original_split] = concatenate_datasets(
@@ -71,7 +71,8 @@ for retry_split in retry_splits:
     del dataset[retry_split]
 assert "geitje.Helpfulness_retry" not in dataset
 assert len(dataset["geitje.Helpfulness"].filter(lambda x: x["rating"] is None)) == 0
-
+print(dataset)
+exit()
 # phase2 - review responses
 for criterion in criteria:
     for split in dataset:

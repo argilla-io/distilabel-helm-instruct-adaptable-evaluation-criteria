@@ -56,39 +56,46 @@ criteria = ["Dutchness", "Conciseness", "Helpfulness"]
 dataset["geitje.Helpfulness_retry"] = dataset["geitje.Helpfulness"]
 # Merge retry splits with original sets
 retry_splits = [split for split in dataset if "retry" in split]
+
 for retry_split in retry_splits:
     original_split = retry_split.replace("_retry", "")
+
+    # filter out rows with ratings and get their IDs
     dataset[retry_split] = dataset[retry_split].filter(
         lambda x: x["rating"] is not None
     )
     unique_idx = dataset[retry_split].unique("idx")
+    # remove those IDs from the original split
     dataset[original_split] = dataset[original_split].filter(
         lambda x: x["idx"] not in unique_idx
     )
+    # Overwrite the original split with the concatenated retry
     dataset[original_split] = concatenate_datasets(
         [dataset[retry_split], dataset[original_split]]
     )
+    # Remove the retry split
     del dataset[retry_split]
 assert "geitje.Helpfulness_retry" not in dataset
 assert len(dataset["geitje.Helpfulness"].filter(lambda x: x["rating"] is None)) == 0
-print(dataset)
-exit()
+
 # phase2 - review responses
 for criterion in criteria:
     for split in dataset:
+        # Skip if all ratings are None otherwise filter out unrated rows and create retry split
         if all(x is None for x in dataset[split]["rating"]):
             pass
         else:
             split = split + "_retry"
-        dataset = dataset[split].filter(lambda x: x["rating"] is None)
+            dataset = dataset[split].filter(lambda x: x["rating"] is None)
         if len(dataset):
+            # checkpoint strategy on the retry split
             checkpoint_strategy = DatasetCheckpoint(
                 strategy="hf-hub",
                 extra_kwargs={
                     "repo_id": NEW_DATASET_NAME,
                     "token": HF_API_TOKEN,
                     "private": False,
-                    "split": split,
+                    "split": split,  # checkpo
                 },
                 save_frequency=5,
             )
@@ -109,7 +116,7 @@ for criterion in criteria:
                 )
             )
             dataset = pipe.generate(
-                dataset,
+                dataset[split],
                 batch_size=100,
                 skip_dry_run=False,
                 checkpoint_strategy=checkpoint_strategy,

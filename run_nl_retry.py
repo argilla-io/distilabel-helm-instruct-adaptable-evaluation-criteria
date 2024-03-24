@@ -65,8 +65,8 @@ for retry_split in retry_splits:
     dataset[retry_split] = dataset[original_split].filter(
         lambda x: x["idx"] not in unique_idx
     )
-    dataset[retry_split] = concatenate_datasets(
-        [dataset[retry_split], dataset[retry_split.replace("_retry", "")]]
+    dataset[original_split] = concatenate_datasets(
+        [dataset[retry_split], dataset[original_split]]
     )
     del dataset[retry_split]
 assert "geitje.Helpfulness_retry" not in dataset

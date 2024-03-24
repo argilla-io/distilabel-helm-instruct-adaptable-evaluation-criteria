@@ -61,12 +61,11 @@ for split in retry_splits:
     dataset[split] = dataset[split].filter(lambda x: x["rating"] is not None)
     unique_idx = dataset[split].unique("idx")
     dataset[split] = dataset[old].filter(lambda x: x["idx"] not in unique_idx)
-    dataset[old] = concatenate_datasets(
+    dataset[split] = concatenate_datasets(
         [dataset[split], dataset[split.replace("_retry", "")]]
     )
     del dataset[split]
-print(dataset)
-exit()
+
 
 # phase2 - review responses
 for criterion in criteria:
@@ -75,7 +74,7 @@ for criterion in criteria:
             pass
         else:
             split = split + "_retry"
-        dataset = dataset[split].filter(lambda x: x["rating"] is not None)
+        dataset = dataset[split].filter(lambda x: x["rating"] is None)
         checkpoint_strategy = DatasetCheckpoint(
             strategy="hf-hub",
             extra_kwargs={

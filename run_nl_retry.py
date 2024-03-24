@@ -61,9 +61,12 @@ for split in retry_splits:
     dataset[split] = dataset[split].filter(lambda x: x["rating"] is not None)
     unique_idx = dataset[split].unique("idx")
     dataset[split] = dataset[old].filter(lambda x: x["idx"] not in unique_idx)
-    dataset[split] = concatenate_datasets(
+    dataset[old] = concatenate_datasets(
         [dataset[split], dataset[split.replace("_retry", "")]]
     )
+    del dataset[split]
+print(dataset)
+exit()
 
 # phase2 - review responses
 for criterion in criteria:

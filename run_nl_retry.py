@@ -56,15 +56,19 @@ criteria = ["Dutchness", "Conciseness", "Helpfulness"]
 dataset["geitje.Helpfulness_retry"] = dataset["geitje.Helpfulness"]
 # Merge retry splits with original sets
 retry_splits = [split for split in dataset if "retry" in split]
-for split in retry_splits:
-    old = split.replace("_retry", "")
-    dataset[split] = dataset[split].filter(lambda x: x["rating"] is not None)
-    unique_idx = dataset[split].unique("idx")
-    dataset[split] = dataset[old].filter(lambda x: x["idx"] not in unique_idx)
-    dataset[split] = concatenate_datasets(
-        [dataset[split], dataset[split.replace("_retry", "")]]
+for retry_split in retry_splits:
+    original_split = retry_split.replace("_retry", "")
+    dataset[retry_split] = dataset[retry_split].filter(
+        lambda x: x["rating"] is not None
     )
-    del dataset[split]
+    unique_idx = dataset[retry_split].unique("idx")
+    dataset[retry_split] = dataset[original_split].filter(
+        lambda x: x["idx"] not in unique_idx
+    )
+    dataset[retry_split] = concatenate_datasets(
+        [dataset[retry_split], dataset[retry_split.replace("_retry", "")]]
+    )
+    del dataset[retry_split]
 assert "geitje.Helpfulness_retry" not in dataset
 assert len(dataset["geitje.Helpfulness"].filter(lambda x: x["rating"] is None)) == 0
 
